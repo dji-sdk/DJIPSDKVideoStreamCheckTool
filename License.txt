@@ -1,0 +1,9 @@
+The Video Stream Check Tool (“Software” referred to in the terms below) are made available to you under the terms of
+the GPL License, either version 2 of the License, or (at your option) any later version. Read the file COPYING.GPLv2
+and COPYING.GPLv3 for details.
+
+The Software uses modified FFmpeg, available at https://git.ffmpeg.org/gitweb/ffmpeg.git, licensed under LGPL v2.1+.
+Read the file COPYING.LGPLv2.1 and COPYING.LGPLv3 for details.
+
+The Software uses unmodified x264, available at https://code.videolan.org/videolan/x264.git, licensed under GPL v2+.
+Read the file COPYING.GPLv2 and COPYING.GPLv3 for details.
