@@ -62,6 +62,9 @@ class H264Checker : public CheckerBase {
         //SPS *mSps;
 
         int mFrameCnt;
+        uint32_t frameCount;
+        uint32_t framePassedCount;
+        uint32_t totalCount;
 };
 
 #endif /* __H264_CHECKER_H__ */

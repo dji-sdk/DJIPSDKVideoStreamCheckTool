@@ -17,7 +17,7 @@ ifeq (,$(shell mkdir -p $(BIN_PATH) $(OBJ_PATH) $(SRC_PATH) $(DBG_PATH)))
 endif
 
 # compile marcros
-TARGET_NAME := dji_check_stream
+TARGET_NAME := stream_check_tool
 ifeq ($(OS),Windows_NT)
 	TARGET_NAME := $(addsuffix .exe,$(TARGET_NAME))
 endif

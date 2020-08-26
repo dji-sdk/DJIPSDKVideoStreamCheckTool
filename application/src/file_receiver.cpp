@@ -25,6 +25,8 @@
 #include "file_receiver.h"
 #include <string.h>
 
+#define STANDARDS_TEST_NUM                 (15)
+
 const uint32_t kBufferSize = 1024 * 1024;
 const uint32_t kStreamMaxSize = MAX_J_STEAM_SIZE;
 static const uint8_t kAudHex[] = {0x00, 0x00, 0x01, 0x09, 0x10};
@@ -106,7 +108,10 @@ int FileReceiver::recvStream(JBuffer *buffer)
             /* need to read more buffer from file */
             ret = readStreamFromFile();
             if (ret) {
-                JLOGR_PASSED("Congratulations, your stream has passed DJI's strict standards test.\n");
+                for (int i = 0; i < STANDARDS_TEST_NUM; ++i) {
+                    printf("\n");
+                }
+                //JLOGR_PASSED("Congratulations, your video stream has passed the above standards test.\n");
                 exit(0);
             }
             continue;

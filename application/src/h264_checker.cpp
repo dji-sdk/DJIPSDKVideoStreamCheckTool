@@ -150,7 +150,7 @@ int H264Checker::decode(JBuffer *buffer)
     ret = avcodec_send_packet(mCtx, mPkt);
     if (ret < 0) {
         JLOGF("Error sending a packet for decoding");
-        exit(1);
+//        exit(1);
     }
 
     while (ret >= 0) {
@@ -163,8 +163,7 @@ int H264Checker::decode(JBuffer *buffer)
             exit(1);
         }
 
-        JLOGU("Decode frame done! Frame resolution [%dx%d] index:%4d",
-              mFrame->width, mFrame->height, mCtx->frame_number);
+        JLOGU("Decode frame done! Frame index:%4d", mCtx->frame_number);
 
         /* dump yuv */
 #ifndef PROG_RELEASE
@@ -192,7 +191,6 @@ int H264Checker::checkFrame()
     /* TODO: according to dji video stream stardard */
     SPS *sps = (SPS *) h264_get_sps_from_ctx(mCtx);
     PPS *pps = (PPS *) h264_get_pps_from_ctx(mCtx);
-
     int long_term_reference = h264_get_long_term_reference_from_ctx(mCtx);
     int max_num_reorder_frames = h264_get_max_num_reorder_frames(mCtx);
     int max_dec_frame_buffering = h264_get_max_dec_frame_buffering(mCtx);
@@ -211,18 +209,21 @@ int H264Checker::checkFrame()
 //          pps->slice_group_count, sps->ref_frame_count, sps->num_reorder_frames
 //    );
 
+    frameCount++;
+
     if (mPkt->size > 256 * 1024) {
-        JLOGR_FAILED("0.stream size is larger than 256K (reference 7.3.2.1.1)");
+        JLOGR_FAILED("0.stream size is larger than 256K, reference 7.3.2.1.1");
     } else {
-        JLOGR_PASSED("0.stream size is ok (reference 7.3.2.1.1)");
+        totalCount++;
+        JLOGR_PASSED("0.stream size(reference 7.3.2.1.1)");
     }
 
     /*! Stream standard 1: profile_idc */
     if (sps->profile_idc != 66 && sps->profile_idc != 77 && sps->profile_idc != 100) {
         JLOGR_FAILED("1.profile_idc %d, should be 66, 77 or 100, reference 7.3.2.1.1",
                      sps->profile_idc);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("1.profile_idc (reference 7.3.2.1.1)");
     }
 
@@ -230,8 +231,8 @@ int H264Checker::checkFrame()
     if (sps->level_idc > 51) {
         JLOGR_FAILED("2.level_idc %0.1f, should less than 5.1, reference 7.3.2.1.1",
                      sps->level_idc / 10.0);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("2.level_idc (reference 7.3.2.1.1)");
     }
 
@@ -239,8 +240,8 @@ int H264Checker::checkFrame()
     if (sps->chroma_format_idc != 1) {
         JLOGR_FAILED("3.chroma_format_idc %d, should be 1(YUV420), reference 7.3.2.1.1",
                      sps->chroma_format_idc);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("3.YUV420 chroma_format_idc (reference 7.3.2.1.1)");
     }
 
@@ -249,8 +250,8 @@ int H264Checker::checkFrame()
         JLOGR_FAILED("4.bit_depth_luma_minus8 %d bit_depth_chroma_minus8 %d"
                      ", should be 0(only 8-bit depth allowed), reference 7.3.2.1.1",
                      sps->bit_depth_luma - 8, sps->bit_depth_chroma - 8);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("4.chroma and luma only allow 8 bit (reference 7.3.2.1.1)");
     }
 
@@ -260,8 +261,8 @@ int H264Checker::checkFrame()
         JLOGR_FAILED("5.seq_scaling_matrix_presenst_flag %d"
                      ", should be 0, reference 7.3.2.1.1 and 7.3.2.2",
                      sps->scaling_matrix_present);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("5.seq_scaling_matrix_presenst_flag (reference 7.3.2.1.1 and 7.3.2.2)");
     }
 
@@ -269,8 +270,8 @@ int H264Checker::checkFrame()
     if (sps->frame_mbs_only_flag != 1) {
         JLOGR_FAILED("6.frame_mbs_only_flag %d, should be 1, reference 7.3.2.1.1",
                      sps->frame_mbs_only_flag);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("6.frame_mbs_only_flag (reference 7.3.2.1.1)");
     }
 
@@ -280,8 +281,8 @@ int H264Checker::checkFrame()
 
         JLOGR_FAILED("[7.slice_type %d, should be 0 or 2, reference 7.3.3",
                      ff_pict_type_to_slice_type[mParser->pict_type]);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("7.slice_type (reference 7.3.3)");
     }
 
@@ -298,8 +299,8 @@ int H264Checker::checkFrame()
     if (pps->slice_group_count != 1) {
         JLOGR_FAILED("8.num_slice_groups_minus1 %d, should be 0, reference 7.3.2.2",
                      pps->slice_group_count - 1);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("8.num_slice_groups_minus1 (reference 7.3.2.2)");
     }
 
@@ -307,8 +308,8 @@ int H264Checker::checkFrame()
     if (sps->ref_frame_count != 1) {
         JLOGR_FAILED("9.max_num_ref_frames %d, should be 1, reference 7.3.2.1.1",
                      sps->ref_frame_count);
-        exit(100);
     } else {
+        totalCount++;
         JLOGR_PASSED("9.max_num_ref_frames (reference 7.3.2.1.1)");
     }
 
@@ -337,31 +338,26 @@ int H264Checker::checkFrame()
     if (sps->mb_width > 120 || sps->mb_height > 68) {
         JLOGR_FAILED("10.width*height %dx%d, should less than 1920*1088, reference 7.3.2.1.1",
                      sps->mb_width * 16, sps->mb_height * 16);
-        exit(100);
     } else {
-        JLOGR_PASSED("10.maximum resolution limit (reference 7.3.2.1.1) %d %d", sps->time_scale,
-                     sps->num_units_in_tick);
+        totalCount++;
+        JLOGR_PASSED("10.video resolution (reference 7.3.2.1.1)");
     }
 
-//    /*! Stream standard 11: long_term_reference */
-//    if (long_term_reference != 0) {
-//    } else {
-//        JLOGR_PASSED("11.long_term_reference limit (reference 7.3.2.1.1)");
-//    }
-//
-//    /*! Stream standard 12: max_num_reorder_frames */
-//    if (max_num_reorder_frames != 0) {
-//    } else {
-//        JLOGR_PASSED("12.max_num_reorder_frames limit(reference 7.3.2.1.1)");
-//    }
-//
-//    /*! Stream standard 13: max_dec_frame_buffering */
-//    if (max_dec_frame_buffering != 5) {
-//    } else {
-//        JLOGR_PASSED("13.max_dec_frame_buffering limit(reference 7.3.2.1.1)");
-//    }
+    if (totalCount / 11 == frameCount) {
+        framePassedCount++;
+    }
 
     printf("\n");
+    if (frameCount != framePassedCount) {
+        JLOGR_FAILED("Currently, some frames failed the above standards test, frameCount:%d, totalCount:%d",
+                     frameCount, framePassedCount);
+    } else {
+        JLOGR_PASSED("Currently, all frames has passed the above standards test.");
+    }
+
+    fflush(stdout);
+    printf("\033[14A");
+    printf("\033[K");
 
     return 0;
 }
