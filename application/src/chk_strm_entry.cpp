@@ -144,6 +144,8 @@ int32_t getFrameInfoOfVideoFile(const char *path, video_frame_info_t *frameInfo,
     unsigned char *pNalu = NULL;
     unsigned char naluType;
     bool addSlice = false;
+    bool addSeiSlice = false;
+    uint32_t seiLen = 0;
     uint32_t spsLen = 0;
     uint32_t ppsLen = 0;
     uint32_t sliceLen = 0;
@@ -175,6 +177,10 @@ int32_t getFrameInfoOfVideoFile(const char *path, video_frame_info_t *frameInfo,
         naluType = pNalu[0] & 0x1F;
 
         switch (naluType) {
+            case 0x06: // SEI
+                seiLen = len;
+                addSeiSlice = true;
+                break;
             case 0x07: // SPS
                 spsLen = len;
                 break;
@@ -183,7 +189,11 @@ int32_t getFrameInfoOfVideoFile(const char *path, video_frame_info_t *frameInfo,
                 addSlice = true;
                 break;
             default:
-                if (addSlice == true) {
+                if (addSlice == true && addSeiSlice == true) {
+                    sliceLen = len + spsLen + ppsLen + seiLen;
+                    addSlice = false;
+                    addSeiSlice = false;
+                } else if (addSlice == true && addSeiSlice == false) {
                     sliceLen = len + spsLen + ppsLen;
                     addSlice = false;
                 } else {
